@@ -17,8 +17,24 @@ public class ConsumacaoDTO {
     private float valor;
     private Date dataCompra;
 
+    private Long idProduto;
+    private Long idHospedagem;
+
     public static ConsumacaoDTO create(Consumacao consumacao) {
         ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(consumacao, ConsumacaoDTO.class);
+        ConsumacaoDTO dto = modelMapper.map(consumacao, ConsumacaoDTO.class);
+
+        dto.descricao = consumacao.getDescricao();
+        dto.valor = consumacao.getValor();
+        dto.dataCompra = consumacao.getDataCompra();
+
+        if (consumacao.getProduto() != null) {
+            dto.idProduto = consumacao.getProduto().getId();
+        }
+        if (consumacao.getHospedagem() != null) {
+            dto.idHospedagem = consumacao.getHospedagem().getId();
+        }
+
+        return dto;
     }
 }

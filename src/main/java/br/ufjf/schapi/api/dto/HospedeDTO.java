@@ -10,10 +10,21 @@ import org.modelmapper.ModelMapper;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HospedeDTO {
+
+    private Long id;
+    private String nome;
+    private String cpf;
     private String email;
     private String telefone;
+    private Long usuarioSistemaId;
+
     public static HospedeDTO create(Hospede hospede) {
         ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(hospede, HospedeDTO.class);
+        HospedeDTO dto = modelMapper.map(hospede, HospedeDTO.class);
+        if (hospede.getUsuarioSistema() != null) {
+            dto.setUsuarioSistemaId(hospede.getUsuarioSistema().getId());
+        }
+        return dto;
     }
+
 }

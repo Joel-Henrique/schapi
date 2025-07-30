@@ -16,6 +16,10 @@ public class ProdutoDTO {
     private int quantidade;
     public static ProdutoDTO create(Produto produto) {
         ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(produto, ProdutoDTO.class);
+        ProdutoDTO dto = modelMapper.map(produto, ProdutoDTO.class);
+        dto.descricao = produto.getDescricao();
+        dto.valor = produto.getValor();
+        dto.quantidade = produto.getQuantidade();
+        return dto;
     }
 }

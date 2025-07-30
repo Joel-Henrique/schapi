@@ -10,11 +10,20 @@ import org.modelmapper.ModelMapper;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FuncionarioDTO {
+    private Long id;
+    private String nome;
+    private String cpf;
     private String cargo;
     private String telefone;
+    private Long usuarioSistemaId;
 
     public static FuncionarioDTO create(Funcionario funcionario) {
         ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(funcionario, FuncionarioDTO.class);
+        FuncionarioDTO dto = modelMapper.map(funcionario, FuncionarioDTO.class);
+
+        if (funcionario.getUsuarioSistema() != null) {
+            dto.usuarioSistemaId = funcionario.getUsuarioSistema().getId();
+        }
+        return dto;
     }
 }
