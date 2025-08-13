@@ -1,9 +1,13 @@
-package br.ufjf.schapi.model.service;
+package br.ufjf.schapi.api.controller;
 
 import br.ufjf.schapi.api.dto.ReservaDTO;
+import br.ufjf.schapi.exception.RegraNegocioException;
+import br.ufjf.schapi.model.entity.Hospedagem;
+import br.ufjf.schapi.model.entity.Hospede;
 import br.ufjf.schapi.model.entity.Reserva;
 import br.ufjf.schapi.model.service.ReservaService;
-import org.modelmapper.ModelMapper;
+import br.ufjf.schapi.model.repository.HospedagemRepository;
+import br.ufjf.schapi.model.repository.HospedeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +21,13 @@ import java.util.stream.Collectors;
 public class ReservaController {
 
     private final ReservaService service;
+    private final HospedeRepository hospedeRepository;
+    private final HospedagemRepository hospedagemRepository;
 
-    public ReservaController(ReservaService service) {
+    public ReservaController(ReservaService service, HospedeRepository hospedeRepository, HospedagemRepository hospedagemRepository) {
         this.service = service;
+        this.hospedeRepository = hospedeRepository;
+        this.hospedagemRepository = hospedagemRepository;
     }
 
     @GetMapping
@@ -40,18 +48,19 @@ public class ReservaController {
 
     @PostMapping
     public ResponseEntity<ReservaDTO> salvar(@RequestBody ReservaDTO dto) {
-        Reserva reserva = new ModelMapper().map(dto, Reserva.class);
+        Reserva reserva = converter(dto);
         reserva = service.salvar(reserva);
         return new ResponseEntity<>(ReservaDTO.create(reserva), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ReservaDTO> atualizar(@PathVariable Long id, @RequestBody ReservaDTO dto) {
-        if (!service.getReservaById(id).isPresent()) {
+        Optional<Reserva> reservaExistente = service.getReservaById(id);
+        if (!reservaExistente.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        Reserva reserva = new ModelMapper().map(dto, Reserva.class);
+        Reserva reserva = converter(dto);
         reserva.setId(id);
         reserva = service.salvar(reserva);
         return ResponseEntity.ok(ReservaDTO.create(reserva));
@@ -66,5 +75,27 @@ public class ReservaController {
 
         service.excluir(reserva.get());
         return ResponseEntity.noContent().build();
+    }
+
+    private Reserva converter(ReservaDTO dto) {
+        Reserva reserva = new Reserva();
+        reserva.setId(dto.getId());
+        reserva.setDataEntrada(dto.getDataEntrada());
+        reserva.setDataSaida(dto.getDataSaida());
+        reserva.setStatus(dto.getStatus());
+
+        if (dto.getHospedeId() != null) {
+            Hospede hospede = hospedeRepository.findById(dto.getHospedeId())
+                    .orElseThrow(() -> new RegraNegocioException("Hóspede não encontrado"));
+            reserva.setHospede(hospede);
+        }
+
+        if (dto.getHospedagemId() != null) {
+            Hospedagem hospedagem = hospedagemRepository.findById(dto.getHospedagemId())
+                    .orElseThrow(() -> new RegraNegocioException("Hospedagem não encontrada"));
+            reserva.setHospedagem(hospedagem);
+        }
+
+        return reserva;
     }
 }

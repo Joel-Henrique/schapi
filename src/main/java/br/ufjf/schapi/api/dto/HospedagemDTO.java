@@ -22,6 +22,9 @@ public class HospedagemDTO {
     private float valorTotal;
     private String status;
 
+    private Long hospedeId;
+    private Long quartoId;
+
     public static HospedagemDTO create(Hospedagem hospedagem) {
         ModelMapper modelMapper = new ModelMapper();
         return modelMapper.map(hospedagem, HospedagemDTO.class);

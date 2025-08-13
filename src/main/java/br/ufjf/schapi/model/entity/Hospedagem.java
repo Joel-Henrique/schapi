@@ -23,4 +23,6 @@ public class Hospedagem{
 
     @ManyToOne
     private Hospede hospede;
+    @ManyToOne //OneToMany???
+    private Quarto quarto;
 }

@@ -18,7 +18,5 @@ public class Quarto {
     private String status;
 
     @ManyToOne
-    private Hospedagem hospedagem;
-    @OneToOne
     private TipoQuarto tipoQuarto;
 }

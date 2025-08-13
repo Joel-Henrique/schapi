@@ -1,9 +1,11 @@
 package br.ufjf.schapi.api.controller;
 
 import br.ufjf.schapi.api.dto.QuartoDTO;
+import br.ufjf.schapi.exception.RegraNegocioException;
 import br.ufjf.schapi.model.entity.Quarto;
+import br.ufjf.schapi.model.entity.TipoQuarto;
 import br.ufjf.schapi.model.service.QuartoService;
-import org.modelmapper.ModelMapper;
+import br.ufjf.schapi.model.service.TipoQuartoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +19,11 @@ import java.util.stream.Collectors;
 public class QuartoController {
 
     private final QuartoService service;
+    private final TipoQuartoService tipoQuartoService;
 
-    public QuartoController(QuartoService service) {
+    public QuartoController(QuartoService service, TipoQuartoService tipoQuartoService) {
         this.service = service;
+        this.tipoQuartoService = tipoQuartoService;
     }
 
     @GetMapping
@@ -39,22 +43,51 @@ public class QuartoController {
     }
 
     @PostMapping
-    public ResponseEntity<QuartoDTO> salvar(@RequestBody QuartoDTO dto) {
-        Quarto quarto = new ModelMapper().map(dto, Quarto.class);
-        quarto = service.salvar(quarto);
-        return new ResponseEntity<>(QuartoDTO.create(quarto), HttpStatus.CREATED);
+    public ResponseEntity<?> salvar(@RequestBody QuartoDTO dto) {
+        try {
+            Quarto quarto = new Quarto();
+            quarto.setNumero(dto.getNumero());
+            quarto.setStatus(dto.getStatus());
+
+            if (dto.getTipoQuartoId() != null) {
+                TipoQuarto tipoQuarto = tipoQuartoService.getTipoQuartoById(dto.getTipoQuartoId())
+                        .orElseThrow(() -> new RegraNegocioException("Tipo de quarto não encontrado."));
+                quarto.setTipoQuarto(tipoQuarto);
+            }
+
+            quarto = service.salvar(quarto);
+            return new ResponseEntity<>(QuartoDTO.create(quarto), HttpStatus.CREATED);
+        } catch (RegraNegocioException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<QuartoDTO> atualizar(@PathVariable Long id, @RequestBody QuartoDTO dto) {
-        if (!service.getQuartoById(id).isPresent()) {
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody QuartoDTO dto) {
+        Optional<Quarto> optional = service.getQuartoById(id);
+
+        if (!optional.isPresent()) {
             return ResponseEntity.notFound().build();
         }
 
-        Quarto quarto = new ModelMapper().map(dto, Quarto.class);
-        quarto.setId(id);
-        quarto = service.salvar(quarto);
-        return ResponseEntity.ok(QuartoDTO.create(quarto));
+        try {
+            Quarto quarto = optional.get();
+            quarto.setNumero(dto.getNumero());
+            quarto.setStatus(dto.getStatus());
+
+            if (dto.getTipoQuartoId() != null) {
+                TipoQuarto tipoQuarto = tipoQuartoService.getTipoQuartoById(dto.getTipoQuartoId())
+                        .orElseThrow(() -> new RegraNegocioException("Tipo de quarto não encontrado."));
+                quarto.setTipoQuarto(tipoQuarto);
+            } else {
+                quarto.setTipoQuarto(null);
+            }
+
+            quarto = service.salvar(quarto);
+            return ResponseEntity.ok(QuartoDTO.create(quarto));
+        } catch (RegraNegocioException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")

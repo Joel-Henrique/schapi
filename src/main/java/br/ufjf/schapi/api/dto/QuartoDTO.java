@@ -10,12 +10,19 @@ import org.modelmapper.ModelMapper;
 @AllArgsConstructor
 public class QuartoDTO {
     private Long id;
-
     private int numero;
     private String status;
+    private Long tipoQuartoId;
 
     public static QuartoDTO create(Quarto quarto) {
         ModelMapper modelMapper = new ModelMapper();
-        return modelMapper.map(quarto, QuartoDTO.class);
+        QuartoDTO dto = modelMapper.map(quarto, QuartoDTO.class);
+
+        if (quarto.getTipoQuarto() != null) {
+            dto.setTipoQuartoId(quarto.getTipoQuarto().getId());
+        }
+
+        return dto;
     }
 }
+
