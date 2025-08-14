@@ -52,20 +52,15 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Rotas públicas
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/webjars/**").permitAll()
                         .requestMatchers("/api/v1/usuarios/auth").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/usuarios/**").permitAll()
 
-                        // Rotas de admin
                         .requestMatchers("/api/usuarios-sistema/**", "/api/funcionarios/**").hasRole("ADMIN")
 
-                        // Rotas de usuário logado
                         .requestMatchers("/api/produtos/**", "/api/quartos/**", "/api/reservas/**",
                                 "/api/servicos/**", "/api/tipos-quarto/**", "/api/tipos-servico/**")
                         .authenticated()
-
-                        // Qualquer outra rota precisa de autenticação
                         .anyRequest().authenticated()
                 )
 
